@@ -1,54 +1,44 @@
-function log(target) {
-  const desc = Object.getOwnPropertyDescriptors(target.prototype);
-  console.log(target.prototype);
-  console.log(desc);
-  for (const key of Object.keys(desc)) {
-    if (key === 'constructor') {
-      continue;
-    }
-    console.log(desc[key]);
-    const func = desc[key].value;
+import { observable, isArrayLike, computed, autorun, when, reaction } from "mobx";
 
-    if ('function' === typeof func) {
-      Object.defineProperty(target.prototype, key, {
-        value(...args) {
-          console.log('before ' + key);
-          const ret = func.apply(this, args);
-          console.log('after ' + key);
-          return ret;
-        }
-      })
-    }
+class Store {
+  @observable array = [];
+  @observable obj = {};
+  @observable map = new Map();
+  
+  @observable string = 'hello';
+  @observable number = 20;
+  @observable bool = false;
+
+  @computed get mixed() {
+    return store.string + '/' + store.number;
   }
 }
 
-function readonly(target, key, descriptor) {
-  descriptor.writable = false;
-}
+var store = new Store();
 
-function validate(target, key, descriptor) {
-  const func = descriptor.value;
-  descriptor.value = function(...args) {
-    for (let num of args) {
-      if ('number' !== typeof num) {
-        throw new Error(`${num} is not a number`);
-      }
-    }
+var foo = computed(function() {
+  return store.string + '/' + store.number;
+});
 
-    return func.apply(this, args);
-  }
-}
+foo.observe(function(change){
+  console.log(change);
+});
 
+console.log(foo.get());
+store.string = 'world';
+store.number = 30;
 
-@log
-class Numberic {
-  @readonly PI = 3.1415926;
+// autorun
+autorun(() => {
+  // console.log(store.string + '/' + store.number);
+  console.log(store.mixed);
+})
 
-  @validate
-  add(...nums) {
-    return nums.reduce((p,n) => (p + n), 0);
-  }
-}
+when(() => store.bool, () => console.log("It's true"));
 
-new Numberic().add('11', 2);
-// new Numberic().PI = 100;
+store.bool = true;
+
+// reaction
+reaction(() => [store.string, store.number], arr => console.log(arr.join('--')));
+store.string = 'hello world';
+store.number = 301;
