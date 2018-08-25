@@ -1,6 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import Form from './components/Form';
+import InputArray from './components/InputArray';
 
 class App extends React.Component {
     componentDidMount() {
@@ -10,6 +11,7 @@ class App extends React.Component {
         return (
             <div>
                 <Form />
+                <InputArray />
             </div>
         );
     }
